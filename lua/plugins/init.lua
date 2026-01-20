@@ -9,24 +9,76 @@ return {
   -- These are some examples, uncomment them if you want to see them work!
   {
     "neovim/nvim-lspconfig",
+    lazy = false,
     config = function()
       require "configs.lspconfig"
     end,
   },
   {
-    "tanvirtin/vgit.nvim",
-    lazy = false,
-    dependencies = { "nvim-lua/plenary.nvim", "nvim-tree/nvim-web-devicons" },
-    -- Lazy loading on 'VimEnter' event is necessary.
-    event = "VimEnter",
-    config = function()
-      local opts = require "configs.vgit"
-      require("vgit").setup(opts)
-    end,
-  },
+    "NeogitOrg/neogit",
+    lazy = true,
+    dependencies = {
+      "nvim-lua/plenary.nvim", -- required
+      "sindrets/diffview.nvim", -- optional - Diff integration
 
-  -- test new blink
-  -- { import = "nvchad.blink.lazyspec" },
+      -- Only one of these is needed.
+      "nvim-telescope/telescope.nvim", -- optional
+    },
+    cmd = "Neogit",
+    keys = {
+      { "<leader>gg", "<cmd>Neogit<cr>", desc = "Show Neogit UI" },
+    },
+  },
+  {
+    "ThePrimeagen/harpoon",
+    branch = "harpoon2",
+    lazy = false,
+    config = function()
+      require("configs.harpoon").setup()
+    end,
+    dependencies = { "nvim-lua/plenary.nvim" },
+  },
+  {
+    "sindrets/diffview.nvim",
+    lazy = false,
+  },
+  {
+    "folke/trouble.nvim",
+    opts = {}, -- for default options, refer to the configuration section for custom setup.
+    cmd = "Trouble",
+    keys = {
+      {
+        "<leader>tx",
+        "<cmd>Trouble diagnostics toggle<cr>",
+        desc = "Diagnostics (Trouble)",
+      },
+      {
+        "<leader>tX",
+        "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
+        desc = "Buffer Diagnostics (Trouble)",
+      },
+      {
+        "<leader>cs",
+        "<cmd>Trouble symbols toggle focus=false<cr>",
+        desc = "Symbols (Trouble)",
+      },
+      {
+        "<leader>cl",
+        "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
+        desc = "LSP Definitions / references / ... (Trouble)",
+      },
+      {
+        "<leader>tL",
+        "<cmd>Trouble loclist toggle<cr>",
+        desc = "Location List (Trouble)",
+      },
+      {
+        "<leader>tQ",
+        "<cmd>Trouble qflist toggle<cr>",
+        desc = "Quickfix List (Trouble)",
+      },
+    },
+  },
 
   -- {
   -- 	"nvim-treesitter/nvim-treesitter",
