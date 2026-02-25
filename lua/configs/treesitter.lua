@@ -3,8 +3,27 @@ pcall(function()
   dofile(vim.g.base46_cache .. "treesitter")
 end)
 
-return {
-  auto_install = true,
-  sync_install = true,
-  ensure_installed = { "lua", "luadoc", "printf", "vim", "vimdoc", "javascript", "typescript", "tsx" },
+local M = {}
+
+local languages = {
+  "lua",
+  "luadoc",
+  "printf",
+  "vim",
+  "vimdoc",
+  "javascript",
+  "typescript",
+  "rust",
+  "tsx",
+  "go",
+  "json",
+  "prisma",
 }
+
+M.setup = function()
+  local treesitter = require "nvim-treesitter"
+  treesitter.install(languages):wait(300000)
+
+  treesitter.update(languages):wait(300000)
+end
+return M

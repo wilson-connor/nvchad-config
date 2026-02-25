@@ -1,5 +1,16 @@
 return {
   "nvim-lua/plenary.nvim",
+  {
+    "stevearc/overseer.nvim",
+    opts = {},
+  },
+  {
+    "arnamak/stay-centered.nvim",
+    lazy = false,
+    config = function()
+      require("stay-centered").setup()
+    end,
+  },
   { "nvim-tree/nvim-web-devicons", opts = {}, lazy = true },
   {
     "nvchad/ui",
@@ -68,9 +79,10 @@ return {
     "nvim-treesitter/nvim-treesitter",
     event = { "BufReadPost", "BufNewFile" },
     cmd = { "TSInstall", "TSBufEnable", "TSBufDisable", "TSModuleInfo" },
-    build = ":TSUpdate | TSInstallAll",
-    opts = function()
-      return require "configs.treesitter"
+    lazy = false,
+    build = ":TSUpdate",
+    init = function()
+      return require("configs.treesitter").setup()
     end,
   },
   {
@@ -109,6 +121,9 @@ return {
   },
   {
     "sindrets/diffview.nvim",
+  },
+  {
+    "artemave/workspace-diagnostics.nvim",
   },
   {
     "folke/trouble.nvim",

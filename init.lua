@@ -16,3 +16,5 @@ require "autocmds"
 vim.schedule(function()
   require "mappings"
 end)
+
+require("overseer").setup()

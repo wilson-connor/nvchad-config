@@ -2,7 +2,7 @@ local M = {}
 local map = vim.keymap.set
 
 -- export on_attach & capabilities
-M.on_attach = function(_, bufnr)
+M.on_attach = function(client, bufnr)
   local function opts(desc)
     return { buffer = bufnr, desc = "LSP " .. desc }
   end
@@ -17,6 +17,8 @@ M.on_attach = function(_, bufnr)
   end, opts "List workspace folders")
 
   map("n", "<leader>D", vim.lsp.buf.type_definition, opts "Go to type definition")
+
+  -- require("custom.project_diagnostics").on_attach(client, bufnr)
 end
 
 -- disable semanticTokens
@@ -57,7 +59,8 @@ M.defaults = function()
 
   vim.api.nvim_create_autocmd("LspAttach", {
     callback = function(args)
-      M.on_attach(_, args.buf)
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
+      M.on_attach(client, args.buf)
     end,
   })
 
@@ -78,21 +81,25 @@ M.defaults = function()
   vim.lsp.config("*", { capabilities = M.capabilities, on_init = M.on_init })
   vim.lsp.config("lua_ls", { settings = lua_lsp_settings })
   vim.lsp.enable "lua_ls"
+
+  local typescript_lsp_settings = {
+    typescript = {
+      tsserver = {
+        experimental = {
+          enableProjectDiagnostics = true,
+        },
+      },
+    },
+  }
+  vim.lsp.config("vtsls", { settings = typescript_lsp_settings })
+  vim.lsp.enable "vtsls"
+
   local servers = {
+    "eslint",
     "cssls",
     "html",
-    "eslint",
-    "ts_ls",
+    "prismals",
   }
-
-  -- lsps with default config
-  for _, lsp in ipairs(servers) do
-    vim.lsp.config(lsp, {
-      on_attach = M.on_attach,
-      on_init = M.on_init,
-      capabilities = M.capabilities,
-    })
-  end
 
   vim.lsp.enable(servers)
 end
