@@ -39,7 +39,7 @@ local STATUS_SYMBOLS = {
   C = "=",
   U = "!",
   P = "*",
-  ["?"] = "?",
+  ["?"] = "+",
 }
 
 local STATUS_HIGHLIGHTS = {
@@ -50,7 +50,7 @@ local STATUS_HIGHLIGHTS = {
   C = "GitSignsChange",
   U = "DiagnosticError",
   P = "NvimTreeGitPanelHint",
-  ["?"] = "DiagnosticHint",
+  ["?"] = "GitSignsAdd",
 }
 
 local pinned = {
@@ -307,6 +307,7 @@ local function ensure_highlights()
   vim.api.nvim_set_hl(0, "NvimTreeGitPanelSection", { link = "NvimTreeOpenedFolderName" })
   vim.api.nvim_set_hl(0, "NvimTreeGitPanelHint", { link = "Comment" })
   vim.api.nvim_set_hl(0, "NvimTreeGitPanelPath", { link = "Comment" })
+  vim.api.nvim_set_hl(0, "NvimTreeGitPanelPinnedFile", { link = "GitSignsAdd" })
 end
 
 local function ensure_diff_syntax_groups()
@@ -703,7 +704,21 @@ local function refresh_panel_preserve_selection()
   vim.api.nvim_win_set_cursor(state.panel_win, { math.max(1, math.min(line, max_line)), 0 })
 end
 
-local function add_section(lines, line_map, highlights, title, entries, panel_width)
+local function mark_entries_with_pins(entries, root)
+  local root_pins = get_root_pins(root)
+  if not root_pins then
+    return
+  end
+
+  for _, entry in ipairs(entries) do
+    entry.is_pinned = root_pins[normalize_path(entry.path)] == true
+  end
+end
+
+local function add_section(lines, line_map, highlights, title, entries, panel_width, opts)
+  opts = opts or {}
+  local highlight_pinned_name = opts.highlight_pinned_name == true
+
   local section_line = push_line(lines, string.format(" %s (%d)", title, #entries))
   highlights[#highlights + 1] = {
     group = "NvimTreeGitPanelSection",
@@ -744,19 +759,21 @@ local function add_section(lines, line_map, highlights, title, entries, panel_wi
     local line_number = push_line(lines, line)
     line_map[line_number + 1] = entry
 
+    local status_idx0 = 2
     highlights[#highlights + 1] = {
       group = status_hl(entry.status),
       line = line_number,
-      start_col = 2,
-      end_col = 3,
+      start_col = byteidx(line, status_idx0),
+      end_col = byteidx(line, status_idx0 + 1),
     }
 
     if icon_hl then
+      local icon_idx0 = 4
       highlights[#highlights + 1] = {
         group = icon_hl,
         line = line_number,
-        start_col = byteidx(line, 4),
-        end_col = byteidx(line, 5),
+        start_col = byteidx(line, icon_idx0),
+        end_col = byteidx(line, icon_idx0 + 1),
       }
     end
 
@@ -764,7 +781,7 @@ local function add_section(lines, line_map, highlights, title, entries, panel_wi
     if name_start then
       local name_col_start = name_start - 1
       highlights[#highlights + 1] = {
-        group = "NvimTreeFileName",
+        group = (highlight_pinned_name and entry.is_pinned) and "NvimTreeGitPanelPinnedFile" or "NvimTreeFileName",
         line = line_number,
         start_col = name_col_start,
         end_col = name_col_start + #display_name,
@@ -807,6 +824,8 @@ local function render_git_panel(panel_width)
     staged = {}
     unstaged = {}
   end
+  mark_entries_with_pins(staged, state.root)
+  mark_entries_with_pins(unstaged, state.root)
 
   local branch = get_git_branch(state.root)
   local lines = {}
@@ -816,9 +835,9 @@ local function render_git_panel(panel_width)
   local title_line = push_line(lines, " SOURCE CONTROL  [" .. branch .. "]")
   local root_line = push_line(lines, " " .. vim.fn.fnamemodify(state.root, ":~"))
   push_line(lines, "")
-  add_section(lines, line_map, highlights, "Staged", staged, panel_width)
+  add_section(lines, line_map, highlights, "Staged", staged, panel_width, { highlight_pinned_name = true })
   push_line(lines, "")
-  add_section(lines, line_map, highlights, "Unstaged", unstaged, panel_width)
+  add_section(lines, line_map, highlights, "Unstaged", unstaged, panel_width, { highlight_pinned_name = true })
   push_line(lines, "")
   local hint_line = push_line(lines, " <CR> diff   p pin   s stage   u unstage   1-9 width   R refresh   gp pins   gs/q tree")
 

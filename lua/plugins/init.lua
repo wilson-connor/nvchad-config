@@ -111,15 +111,6 @@ return {
     },
   },
   {
-    "ThePrimeagen/harpoon",
-    branch = "harpoon2",
-    lazy = false,
-    config = function()
-      require("configs.harpoon").setup()
-    end,
-    dependencies = { "nvim-lua/plenary.nvim" },
-  },
-  {
     "sindrets/diffview.nvim",
   },
   {
