@@ -52,6 +52,21 @@ map("v", "<leader>/", "gc", { desc = "toggle comment", remap = true })
 -- nvimtree
 map("n", "<C-n>", "<cmd>NvimTreeToggle<CR>", { desc = "nvimtree toggle window" })
 map("n", "<leader>e", "<cmd>NvimTreeFocus<CR>", { desc = "nvimtree focus window" })
+map("n", "<leader>gp", function()
+  require("configs.nvimtree_git_panel").toggle_current_file_pin()
+end, { desc = "git panel toggle pin current file" })
+map("n", "<leader>gu", function()
+  require("configs.nvimtree_git_panel").toggle_current_unstaged_diff()
+end, { desc = "git panel toggle unstaged diff for file" })
+map("n", "<leader>gs", function()
+  require("configs.nvimtree_git_panel").toggle_current_staged_diff()
+end, { desc = "git panel toggle staged diff for file" })
+for i = 1, 9 do
+  local level = i
+  map("n", "<leader>" .. tostring(level), function()
+    require("configs.nvimtree_git_panel").set_active_diff_width_level(level)
+  end, { desc = "git panel resize active diff level " .. level })
+end
 
 -- telescope
 map("n", "<leader>fw", "<cmd>Telescope live_grep<CR>", { desc = "telescope live grep" })

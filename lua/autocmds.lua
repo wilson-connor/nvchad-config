@@ -1,5 +1,23 @@
 local autocmd = vim.api.nvim_create_autocmd
 
+local function preserve_diff_syntax()
+  local groups = { "DiffAdd", "DiffChange", "DiffDelete", "DiffText" }
+
+  for _, group in ipairs(groups) do
+    local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group, link = false })
+    if ok and type(hl) == "table" and next(hl) ~= nil then
+      local updated = {}
+      for key, value in pairs(hl) do
+        if key ~= "fg" and key ~= "ctermfg" then
+          updated[key] = value
+        end
+      end
+      updated.nocombine = false
+      vim.api.nvim_set_hl(0, group, updated)
+    end
+  end
+end
+
 -- user event that loads after UIEnter + only if file buf is there
 autocmd({ "UIEnter", "BufReadPost", "BufNewFile" }, {
   group = vim.api.nvim_create_augroup("NvFilePost", { clear = true }),
@@ -46,6 +64,35 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   callback = function(args)
     require("conform").format { bufnr = args.buf }
   end,
+})
+
+vim.api.nvim_create_autocmd("VimEnter", {
+  group = vim.api.nvim_create_augroup("NvimTreeOnDirectory", { clear = true }),
+  callback = function()
+    if vim.fn.argc() ~= 1 then
+      return
+    end
+
+    local arg = vim.fn.argv(0)
+    if not arg or arg == "" then
+      return
+    end
+
+    local path = vim.fn.fnamemodify(arg, ":p")
+    if vim.fn.isdirectory(path) ~= 1 then
+      return
+    end
+
+    vim.api.nvim_set_current_dir(path)
+    vim.schedule(function()
+      vim.cmd("silent! NvimTreeFocus")
+    end)
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
+  group = vim.api.nvim_create_augroup("DiffSyntaxPreserve", { clear = true }),
+  callback = preserve_diff_syntax,
 })
 
 -- require("custom.project_diagnostics").setup()
